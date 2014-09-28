@@ -1,0 +1,16 @@
+[
+{
+  "modid": "diamondpower",
+  "name": "Diamond Power",
+  "description": "The power of Diamonds!",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["SchindlerShadow"],
+  "credits": "Forge, FML and the cofh team",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": ["MinecraftForge,CoFHCore,ThermalFoundation"]
+}
+]
