@@ -3,12 +3,14 @@ package com.schindlershadow.diamondpower;
 import java.util.List;
 
 import cofh.api.energy.IEnergyStorage;
+import cofh.lib.util.helpers.EnergyHelper;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.EnumRarity;
 import net.minecraft.item.ItemArmor;
 import net.minecraft.item.ItemArmor.ArmorMaterial;
 import net.minecraft.util.DamageSource;
@@ -18,7 +20,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.common.ISpecialArmor;
 
-public class ArmorHandler extends ItemArmor implements IEnergyStorage {
+public class ArmorHandler extends ItemArmor implements IEnergyStorage, ISpecialArmor {
 	@SideOnly(Side.CLIENT)
 	protected IIcon Icon;
 	protected IIcon texture;
@@ -27,6 +29,9 @@ public class ArmorHandler extends ItemArmor implements IEnergyStorage {
 	protected int maxReceive;
 	protected int maxExtract;
 	protected int Tick = 0;
+	protected int energyPerDamage = 1;
+	protected double absorbRatio = 0.88D;
+	
 	
 	//0 is Boots
     //1 is Legs
@@ -36,12 +41,17 @@ public class ArmorHandler extends ItemArmor implements IEnergyStorage {
 	public ArmorHandler(ArmorMaterial material, int par2, int par3, int capacity) {
 		super(material, par2, par3);
 		this.capacity = capacity;
+		this.setMaxDamage(capacity);
 		maxReceive = capacity;
 		maxExtract = capacity;
-		energy = 100;
+		//energy = 100;
 	}
 	
-	
+	@Override
+	public EnumRarity getRarity(ItemStack stack) {
+
+		return EnumRarity.epic;
+	}
 
 
 	public ArmorHandler readFromNBT(NBTTagCompound nbt) {
@@ -82,15 +92,10 @@ public class ArmorHandler extends ItemArmor implements IEnergyStorage {
 	
 	@Override
     public void onArmorTick(World world, EntityPlayer player, ItemStack armor) {
-		if(energy < capacity){
-			//receiveEnergy(1, false);
-		}
 		
-		if(armor.getItemDamage() > getEnergyStored()){
-			receiveEnergy(1, false);
-		}
-		if(armor.getItemDamage() < getEnergyStored()){
-			extractEnergy(1, false);
+		armor.setItemDamage(getCapacity() - getEnergyStored());
+		if(player.isSneaking()){
+			receiveEnergy(1,false);
 		}
 		//armor.setItemDamage(-getEnergyStored());
 		
@@ -100,6 +105,26 @@ public class ArmorHandler extends ItemArmor implements IEnergyStorage {
     public void addInformation(ItemStack stack, EntityPlayer player, List list, boolean check) {
     	list.add("Energy: " + energy + "/" + capacity + " RF");
     }
+    
+    protected int getBaseAbsorption() {
+
+        return 20;
+    }
+    
+    protected int getAbsorptionRatio() {
+
+        switch (armorType) {
+            case 0:
+                return 15;
+            case 1:
+                return 40;
+            case 2:
+                return 30;
+            case 3:
+                return 15;
+        }
+        return 0;
+    }
 	
 	public void setCapacity(int capacity) {
 
@@ -108,6 +133,10 @@ public class ArmorHandler extends ItemArmor implements IEnergyStorage {
 		if (energy > capacity) {
 			energy = capacity;
 		}
+	}
+	
+	public int getCapacity(){
+		return capacity; 
 	}
 
 	public void setMaxTransfer(int maxTransfer) {
@@ -203,6 +232,27 @@ public class ArmorHandler extends ItemArmor implements IEnergyStorage {
 	public int getMaxEnergyStored() {
 
 		return capacity;
+	}
+
+	@Override
+	public ArmorProperties getProperties(EntityLivingBase player,
+			ItemStack armor, DamageSource source, double damage, int slot) {
+        return new ArmorProperties(0, absorbRatio, 16);
+	}
+
+	@Override
+	public int getArmorDisplay(EntityPlayer player, ItemStack armor, int slot) {
+		if (getEnergyStored() >= energyPerDamage) {
+            return Math.min(getBaseAbsorption(), 20) * getAbsorptionRatio() / 100;
+        }
+        return 0;
+	}
+
+	@Override
+	public void damageArmor(EntityLivingBase entity, ItemStack stack,
+			DamageSource source, int damage, int slot) {
+		extractEnergy(damage, false);
+		
 	}
 
 
