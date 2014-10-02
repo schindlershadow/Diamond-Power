@@ -1,50 +1,38 @@
-package com.schindlershadow.diamondpower;
+package cofh.api.energy;
 
-import java.util.List;
-
-import cofh.api.energy.IEnergyStorage;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
-import net.minecraft.client.renderer.texture.IIconRegister;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemArmor;
-import net.minecraft.item.ItemArmor.ArmorMaterial;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.IIcon;
-import net.minecraft.world.World;
-import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraftforge.common.ISpecialArmor;
 
-public class ArmorHandler extends ItemArmor implements IEnergyStorage {
-	@SideOnly(Side.CLIENT)
-	protected IIcon Icon;
-	protected IIcon texture;
-	protected int energy = 0;
+/**
+ * Reference implementation of {@link IEnergyStorage}. Use/extend this or implement your own.
+ * 
+ * @author King Lemming
+ * 
+ */
+public class EnergyStorage implements IEnergyStorage {
+
+	protected int energy;
 	protected int capacity;
 	protected int maxReceive;
 	protected int maxExtract;
-	protected int Tick = 0;
-	
-	//0 is Boots
-    //1 is Legs
-    //2 is Chest
-    //3 is Helm
 
-	public ArmorHandler(ArmorMaterial material, int par2, int par3, int capacity) {
-		super(material, par2, par3);
-		this.capacity = capacity;
-		maxReceive = capacity;
-		maxExtract = capacity;
-		energy = 100;
+	public EnergyStorage(int capacity) {
+
+		this(capacity, capacity, capacity);
 	}
-	
-	
 
+	public EnergyStorage(int capacity, int maxTransfer) {
 
-	public ArmorHandler readFromNBT(NBTTagCompound nbt) {
+		this(capacity, maxTransfer, maxTransfer);
+	}
+
+	public EnergyStorage(int capacity, int maxReceive, int maxExtract) {
+
+		this.capacity = capacity;
+		this.maxReceive = maxReceive;
+		this.maxExtract = maxExtract;
+	}
+
+	public EnergyStorage readFromNBT(NBTTagCompound nbt) {
 
 		this.energy = nbt.getInteger("Energy");
 
@@ -53,7 +41,7 @@ public class ArmorHandler extends ItemArmor implements IEnergyStorage {
 		}
 		return this;
 	}
-	
+
 	public NBTTagCompound writeToNBT(NBTTagCompound nbt) {
 
 		if (energy < 0) {
@@ -63,44 +51,6 @@ public class ArmorHandler extends ItemArmor implements IEnergyStorage {
 		return nbt;
 	}
 
-	
-	
-	@SideOnly(Side.CLIENT)
-	public java.lang.String getArmorTexture(ItemStack stack,
-            Entity entity,
-            int slot,
-            java.lang.String type){
-		String layer = "1";
-		if(type == null) {
-			type = "";
-		}
-		if(slot == 2) {
-            layer="2";
-		}
-		return DiamondPower.MODID + ":textures/models/armor/diamond_layer_" + layer + ".png";
-	}
-	
-	@Override
-    public void onArmorTick(World world, EntityPlayer player, ItemStack armor) {
-		if(energy < capacity){
-			//receiveEnergy(1, false);
-		}
-		
-		if(armor.getItemDamage() > getEnergyStored()){
-			receiveEnergy(1, false);
-		}
-		if(armor.getItemDamage() < getEnergyStored()){
-			extractEnergy(1, false);
-		}
-		//armor.setItemDamage(-getEnergyStored());
-		
-	}
-	
-    @Override
-    public void addInformation(ItemStack stack, EntityPlayer player, List list, boolean check) {
-    	list.add("Energy: " + energy + "/" + capacity + " RF");
-    }
-	
 	public void setCapacity(int capacity) {
 
 		this.capacity = capacity;
@@ -169,7 +119,7 @@ public class ArmorHandler extends ItemArmor implements IEnergyStorage {
 			this.energy = 0;
 		}
 	}
-	
+
 	/* IEnergyStorage */
 	@Override
 	public int receiveEnergy(int maxReceive, boolean simulate) {
@@ -204,15 +154,5 @@ public class ArmorHandler extends ItemArmor implements IEnergyStorage {
 
 		return capacity;
 	}
-
-
-
-
-	
-		
-		
-		
-	
- 
 
 }
